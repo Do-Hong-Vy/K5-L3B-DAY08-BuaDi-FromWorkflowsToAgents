@@ -9,10 +9,12 @@
 
 ## Thành viên
 
-| STT | Họ tên | MSSV | Email | GitHub | Vai trò |
-| --: | ------ | ---- | ----- | ------ | ------- |
-|   1 |        |      |       |        |         |
-|   2 |        |      |       |        |         |
+| STT | Họ tên           | MSSV        | Email                   | GitHub        | Vai trò     |
+| --: | ---------------- | ----------- | ----------------------- | ------------- | ----------- |
+|   1 | Đỗ Hồng Vỹ       | 2A202604107 | 26ai.vydh@vinuni.edu.vn | Do-Hong-Vy    | Nhóm trưởng |
+|   2 | Nguyễn Ánh Dương | 2A202604087 |                         | nganhduong123 | Thành viên  |
+|   3 | Đinh Hoàng Phong | 2A202604090 |                         | phog2811      | Thành viên  |
+|   4 | Phạm Văn Chiêu   | 2A202604033 |                         | pvchiu        | Thành viên  |
 
 Gợi ý chia vai:
 
@@ -24,8 +26,8 @@ Gợi ý chia vai:
 `python -m lab8.check_submission` đọc bảng này bằng máy: giữ nguyên tiêu đề `## Bảng đóng góp` và các cột. Mỗi người một dòng: commit có nội dung và ít nhất một test đã thêm hoặc sửa.
 
 | Người | Vai | Commit | Test đã thêm hoặc sửa |
-| --- | --- | --- | --- |
-| | | | |
+| ----- | --- | ------ | --------------------- |
+|       |     |        |                       |
 
 ## Cá nhân
 

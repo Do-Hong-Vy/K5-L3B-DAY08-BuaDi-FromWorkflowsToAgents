@@ -375,6 +375,8 @@ function heatmap(){
 const CMDS = [
   "python -m lab8.benchmark --shapes workflow,single,orchestrator,swarm --cases data/public_claims.jsonl --seeds 11,22,33,44,55 --out reports/benchmark.json",
   "python -m lab8.crash_test --count 20 --out reports/crash.json",
+  "python -m lab8.benchmark --shapes workflow,single,orchestrator --cases student_drop/hidden_claims.jsonl --world student_drop/hidden_world_state.json --out reports/hidden_selfcheck.json",
+  "python scripts/hidden_oracle_check.py student_drop/hidden_claims.jsonl student_drop/hidden_world_state.json",
   "python -m lab8.check_submission"
 ];
 R.cp5 = () => {
@@ -405,7 +407,7 @@ ${SHAPES.map(s=>{const b=B[s];return `<tr class="${s==="workflow"?"pick":""}"><t
 </div>
 <div class="panel"><h3>Lệnh tái lập (chạy trong <span class="mono">src/</span>)</h3>
 ${CMDS.map((c,i)=>`<div class="cmd"><pre class="code" id="cmd${i}">${esc(c)}</pre><button type="button" class="copy" data-i="${i}">Sao chép</button></div>`).join("")}
-<p class="note">Giới hạn: MockLLM cố định theo seed, không phải model sản xuất; bộ public chỉ ${DATA.cv.claim_ids.length} claim, hidden 40 claim × 5 seed do giảng viên chấm.</p></div>
+<p class="note">Giới hạn: MockLLM cố định theo seed, không phải model sản xuất; bộ public chỉ ${DATA.cv.claim_ids.length} claim. Tự kiểm hidden (<span class="mono">student_drop/</span>, 40 claim × 5 seed): cả 3 shape 0 error, 0 leak suspect, và 200/200 theo oracle nhóm dựng từ luật nghiệp vụ (khớp 14/14 nhãn public); điểm hidden chính thức do giảng viên chấm.</p></div>
 ${pager(5)}`;
 };
 

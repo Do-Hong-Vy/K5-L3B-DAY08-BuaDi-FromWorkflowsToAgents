@@ -77,5 +77,6 @@ Tất cả lệnh chạy trong `src/` bằng `.venv` của repo (Python 3.13.0),
 
 - Single qua 62/62 test public và loại được lỗi tin ticket mà swarm mắc ở seed 55.
 - Single đúng như workflow nhưng tốn hơn khoảng 26% cost/success (36.30 so với 28.79) vì có 4–5 model call mỗi claim thay vì 1. Đây là chi phí của việc để vòng lặp chọn tool khi bài này không cần.
-- Rủi ro còn lại: bộ hidden (`student_drop/`) chưa chạy; crash suite 20 điểm (`lab8.crash_test`) chỉ chạy shape swarm cho phần shape, nên crash/resume của single mới được kiểm bằng test riêng ở 3 điểm crash.
+- Bộ hidden (`student_drop/`, không có nhãn) đã được nhóm tự kiểm ở CP5: single chạy 200 trial, 0 error, 0 leak suspect (`src/reports/hidden_selfcheck.json`), và đạt 200/200 theo oracle nhóm dựng từ `business_rules.md` (`src/scripts/hidden_oracle_check.py`); điểm chính thức vẫn do grader giảng viên chấm.
+- Rủi ro còn lại: crash suite 20 điểm (`lab8.crash_test`) chỉ chạy shape swarm cho phần shape, nên crash/resume của single mới được kiểm bằng test riêng ở 3 điểm crash.
 - Tôi giải thích được ranh giới code/model trong single, vì sao truyền quote đầy đủ, và trace cố ý không ghi field nào.

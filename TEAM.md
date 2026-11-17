@@ -14,7 +14,7 @@
 |   1 | Đỗ Hồng Vỹ       | 2A202604107 | 26ai.vydh@vinuni.edu.vn | Do-Hong-Vy    | Nhóm trưởng — workflow + integration |
 |   2 | Nguyễn Ánh Dương | 2A202604087 |                         | nganhduong123 | Single (ReAct) |
 |   3 | Đinh Hoàng Phong | 2A202604090 |                         | phog2811      | Orchestrator + handoff |
-|   4 | Phạm Văn Chiêu   | 2A202604033 |                         | pvchiu        | Ledger/crash + evaluation |
+|   4 | Phạm Văn Chiêu   | 2A202604033 | 26ai.chieupv@vinuni.edu.vn | pvchiu        | Ledger/crash + evaluation |
 
 Gợi ý chia vai:
 
@@ -28,6 +28,7 @@ Gợi ý chia vai:
 | Người | Vai | Commit | Test đã thêm hoặc sửa |
 | ----- | --- | ------ | --------------------- |
 | Đỗ Hồng Vỹ | Workflow + integration | | `tests/test_workflow_extra.py` (27 test) |
+| Phạm Văn Chiêu | Ledger/crash + evaluation | 68d2a19 | `tests/test_durability_extra.py` (14 test) |
 
 ## Cá nhân
 
@@ -73,3 +74,24 @@ Sao chép mục dưới đây cho từng thành viên.
 - `python -m pytest -q -m student -o addopts= -k workflow` → 62 passed.
 - `R-workflow-C-002-s55`, `R-workflow-C-014-s11` trong `src/reports/benchmark.json`.
 - Báo cáo cá nhân: `report/team/2A202604107_DoHongVy.md`.
+
+## 2A202604033_PhamVanChieu
+
+### Phần việc phụ trách
+
+- Ledger, durability, crash test suite; approval & policy audit; benchmark và evaluation.
+- Rà soát tính đúng đắn về tiền & approval của cả 3 shape; chạy crash suite 20 kịch bản; chạy benchmark 4 shape × 5 seed.
+- Phối hợp ablation cho `research_card.md` và viết Mục 4 Kết quả của `group_report.md`.
+
+### Đóng góp cụ thể
+
+- Thêm bộ test độ bền `src/tests/test_durability_extra.py` (12 test kiểm tra idempotency, crash-recovery tại 3 điểm inject, bảo toàn audit log, ngăn chặn conflict amount).
+- Lập checklist ma trận 14 public claims (T01–T14) đối chiếu luật bồi thường và approval để nhóm bám sát.
+- Chạy và kiểm soát `src/reports/crash.json` đạt `crash_safety = 20/20` (Must-pass 3).
+- Chạy ma trận benchmark `src/reports/benchmark.json` và tổng hợp số liệu cho ADR, research card và group report.
+
+### Bằng chứng
+
+- `python -m pytest -q -k durability` → passed.
+- `crash_safety = 20/20` trong `src/reports/crash.json`.
+- Báo cáo cá nhân: `report/team/2A202604033_PhamVanChieu.md`.

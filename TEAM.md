@@ -3,7 +3,7 @@
 ## Thông tin nhóm
 
 - Tên nhóm: BuaDi
-- Lớp: L3A
+- Lớp: L3B
 - Repo nhóm: `K5-L3B-DAY08-BuaDi-FromWorkflowsToAgents` (xem [SUBMISSION.md](SUBMISSION.md))
 - URL repo, nhánh nộp, commit chốt: https://github.com/Do-Hong-Vy/K5-L3B-DAY08-BuaDi-FromWorkflowsToAgents, nhánh `main`, commit chốt:
 

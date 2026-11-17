@@ -27,7 +27,7 @@ Nhóm 4 người, chia theo gợi ý trong `TEAM.md`: **workflow + integration; 
 
 | # | Việc | Ai | Xong khi |
 | - | ---- | -- | -------- |
-| 1.1 | Fork repo đề bài, đổi tên thành `K5-L3A-DAY08-<TenNhom>-FromWorkflowsToAgents` (không dấu, không khoảng trắng). Để public **hoặc** mời giảng viên vào repo. Mời 3 thành viên làm collaborator | M1 | Repo nhóm tồn tại, cả 4 người push được |
+| 1.1 | Fork repo đề bài, đổi tên thành `K5-L3B-DAY08-<TenNhom>-FromWorkflowsToAgents` (không dấu, không khoảng trắng). Để public **hoặc** mời giảng viên vào repo. Mời 3 thành viên làm collaborator | M1 | Repo nhóm tồn tại, cả 4 người push được |
 | 1.2 | Clone **repo nhóm** (không làm trên repo đề bài), tạo venv, `pip install -r requirements.txt` | Cả 4 | — |
 | 1.3 | Chạy `python -m lab8.smoke` → in `lab8.smoke pass` | Cả 4 | Mỗi máy đều pass |
 | 1.4 | Chạy `python -m pytest -q` → `52 passed, 248 deselected`, không có `failed` | Cả 4 | — |
@@ -197,7 +197,7 @@ Chỉ làm khi 3 shape xong, must-pass đạt, và còn thời gian. Gate: shape
 
 ## Checklist cuối cùng (đối chiếu SUBMISSION.md + RUBRIC.md)
 
-- [ ] Repo đúng tên `K5-L3A-DAY08-<TenNhom>-FromWorkflowsToAgents`, public hoặc đã mời giảng viên.
+- [ ] Repo đúng tên `K5-L3B-DAY08-<TenNhom>-FromWorkflowsToAgents`, public hoặc đã mời giảng viên.
 - [ ] 3 shape không còn `not_implemented`, mỗi shape 62/62 test student (C1).
 - [ ] T11, T12 xanh; `reports/crash.json` = 20/20 (C3, must-pass 3).
 - [ ] Approval bypass = 0; `policy_denied` đúng (C4, must-pass 1).

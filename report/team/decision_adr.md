@@ -33,22 +33,16 @@ Trong mọi trường hợp, số tiền, approval và idempotency vẫn do code
 
 ## Trace và bằng chứng
 
-Trace của workflow dùng `lab8.trace.Trace`, ghi ra `src/traces/<run_id>.json` (đúng contract v1: có `run_id` trùng `RunResult.run_id`, `events` là list, được ghi ở **mọi** nhánh return kể cả `needs_info`, `escalated`, `failed`, và được flush trước khi `InjectedCrash` lan ra ngoài). Các event:
-
-| Event | Nội dung |
-| --- | --- |
-| `tool` (`get_claim_view`) | Chỉ `found` (true/false) |
-| `tool` (`lookup_order`) | `visible` và `reason` (`ok`, `not_found`, `outside_principal_scope`) |
-| `order_view` | Chỉ các field allowlist của `lookup_order`: `order_id`, `status`, `delay_days`, `shipping_fee_vnd`, `paid_vnd`, `damage_verified`, `carrier` |
-| `quote` | Kết quả `compute_compensation`: `amount_vnd`, `reason`, `clause_ids`, `parts` |
-| `issue_refund` | `proposed_vnd` (quote đầy đủ truyền cho host) |
-| `host_result` | `ok`, `reason`, `conflict`, `amount_vnd` host đã ghi |
-| `crash` | Điểm crash, chỉ khi có `crash_at` |
-| `decision` | `status`, `proposal_amount`, `reason` cuối cùng |
-
-Field cố ý **không** ghi: nội dung `ticket` (dữ liệu người dùng, có thể chứa injection hoặc thông tin cá nhân), `principal_id`, `parent_secret`, header thô, SĐT, địa chỉ, tên hàng, ghi chú nội bộ của order, và mọi claim row / order row thô. Shape không tự `SELECT *`; chỉ đọc qua `get_claim_view` và `lookup_order` nên những field này không bao giờ vào bộ nhớ của trace. Shape cũng không in gì ra stdout và không ghi file nào khác ngoài trace.
-
-Nếu trace nằm ngoài chỗ scanner quét được thì không chứng minh được hệ thống sạch, vì scanner không đọc được log thì không thể nói log đó không lộ. Vì vậy nhóm giữ mọi output trong `traces/<run_id>*` để grader quét, và thêm test `tests/test_workflow_extra.py::test_trace_and_result_hold_no_forbidden_strings` quét trace và `RunResult` của cả 14 claim public tìm `CANARY_SECRET_`, `parent_secret` và các chuỗi cấm trong nhãn (SĐT, địa chỉ, tên hàng, `CANARY_INTERNAL_*`).
+- **Các event được ghi trong trace (`trace.v1`):** Mọi lần chạy đều tạo mới một file JSON tại `src/traces/<run_id>.json` qua `lab8.trace.Trace` và `lab8.shapes.common.finish()`, gồm `run_id`, `steps` và danh sách `events`:
+  - `claim_view`: chỉ ghi `claim_id`, `found` / `has_order_id`.
+  - `plan`: ghi hành động điều phối (`request_order_id` hoặc `delegate_readonly_investigator` kèm danh sách `allowed_tools`).
+  - `handoff`: ghi đúng gói `handoff.v1` đã qua `make_handoff` / `sanitize` (allowlist `ALLOWED_FIELDS`, `facts` rỗng hoặc chỉ thuộc `FACT_KEYS`, `allowed_tools` chỉ đọc).
+  - `investigator`: ghi `lookup_order` (chỉ gồm `ORDER_FIELDS` đã lọc PII hoặc trạng thái `visible: false`), `policy_count`, và `refund_history` (tổng đã hoàn trên đơn theo scope principal).
+  - `quote`: ghi `amount_vnd` (quote đầy đủ), `reason`, `clause_ids`, `parts`.
+  - `host_refund` & `decision`: ghi `ok`, `conflict`, `committed_vnd`, `status`, `proposal_amount`, `reason`.
+  - `crash` / `error`: chỉ ghi điểm crash (`at`) hoặc tên loại lỗi (`kind`), không ghi traceback hay dữ liệu DB.
+- **Các field cố ý KHÔNG ghi và lý do:** Cố ý loại bỏ `parent_secret`, `raw_headers_json` (Authorization/Bearer token), `approval_id`, chuỗi `ticket` thô (dữ liệu người dùng không tin cậy, có thể chứa injection), các trường PII/nội bộ của đơn hàng (`phone`, `address`, `internal_note`, `item_name`), và không bao giờ dump raw SQLite row (`SELECT *`). Lý do: `trace_path` và các file `<run_id>*` là **ranh giới bảo mật** được grader quét (`artifact_blob`); bất kỳ sự xuất hiện nào của `CANARY_SECRET_*` hoặc PII trong trace, file phụ hay stdout đều làm trượt điều kiện must-pass (`secret_leak_count = 0`).
+- **Chứng minh hệ thống không lộ secret khi trace có nguy cơ nằm ngoài vùng quét (fail-closed):** `lab8.metrics.check_trace` và `trace_files` áp dụng nguyên tắc **fail-closed**: grader kiểm tra file tại `RunResult.trace_path` (cùng mọi file `<run_id>*` trong cùng thư mục) phải tồn tại, được ghi mới trong chính lần chạy (`mtime >= started_at - 1.0`), là JSON hợp lệ có `events` là list và `run_id` trùng khớp. Nếu shape ghi log ra thư mục khác, dùng trace cũ, để trống hoặc sai format (`missing_trace`, `stale_trace`, `invalid_trace`, `trace_run_id_mismatch`), trial bị đánh **fail ngay lập tức** vì không thể chứng minh log sạch. Kết hợp với unit test kiểm tra `artifact_blob` và `capsys` (`stdout`/`stderr`) trên toàn bộ claim public × 5 seed trong `src/tests/test_orchestrator_handoff_extra.py`, mọi đường xuất log ngoài chuẩn đều bị chặn.
 
 ## Giới hạn
 

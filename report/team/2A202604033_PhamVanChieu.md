@@ -19,7 +19,7 @@
 
 ## 3. Đóng góp cụ thể
 
-**Commit chính:** `68d2a19` — `feat(durability): add durability test suite, T01-T14 checklist, and personal report for Pham Van Chieu`
+**Commit chính:** `59886e7` — `feat(durability): add durability test suite, T01-T14 checklist, and personal report for Pham Van Chieu`
 
 **Kiểm soát giao dịch & Độ bền (Durability & Idempotency):**
 - Xác minh và bảo đảm quy tắc idempotency: Khóa `refund:{claim_id}` đảm bảo khi replay/retry nhiều lần cùng một claim thì chỉ duy nhất một bản ghi được ghi vào `refund_ledger` và một sự kiện `refund_committed` trong `audit_events`.

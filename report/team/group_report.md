@@ -6,7 +6,7 @@ Tối đa 5 trang ngoài phụ lục. Số liệu lấy từ file trong `src/rep
 
 - Tên nhóm: BuaDi
 - Thành viên: xem `TEAM.md` (Đỗ Hồng Vỹ — nhóm trưởng, Nguyễn Ánh Dương, Đinh Hoàng Phong, Phạm Văn Chiêu)
-- Commit chốt (trùng `report/team/decision_adr.md`):
+- Commit chốt (trùng `report/team/decision_adr.md`): 0bc1326
 
 ## 2. Mục tiêu và cách tiếp cận
 
@@ -34,21 +34,7 @@ Tối đa 5 trang ngoài phụ lục. Số liệu lấy từ file trong `src/rep
 
 ### 3.1 Shape A — workflow (`src/lab8/shapes/workflow.py`)
 
-### Shape A — Workflow (M1)
-
-*(Đợi M1 bổ sung sau khi hoàn thiện `workflow.py`)*
-
-### Shape B — Single ReAct Agent (M2)
-
-*(Đợi M2 bổ sung sau khi hoàn thiện `single.py`)*
-
-### Shape C — Orchestrator & Read-only Investigators (M3 — Đinh Hoàng Phong)
-
-- **Đọc dữ liệu & lập kế hoạch:** Orchestrator mở SQLite store, đọc thông tin claim qua `lab8.tools.get_claim_view` (chỉ lấy `claim_id`, `principal_id`, `order_id`, `ticket`; không truy vấn `SELECT *`, không đọc `parent_secret` hay `raw_headers_json`). Nếu thiếu `claim_id` trả `failed` (`unknown_claim`); nếu thiếu `order_id` trả `needs_info` (tuyệt đối không tách mã đơn từ chữ trong `ticket`).
-- **Handoff & Sanitization:** Orchestrator dùng `lab8.handoff.make_handoff` tạo gói `handoff.v1` chứa các trường trong allowlist (`ALLOWED_FIELDS`), `facts` rỗng (không chứa context của parent, header, hay thông tin cá nhân) và `allowed_tools` chỉ gồm 3 tool đọc (`lookup_order`, `lookup_policy`, `lookup_refund_history`). Sau đó `lab8.runtime.run_readonly_investigators` thực thi các tool này với `worker=True` và kiểm tra scope `principal_id`; investigator không có write registry và bị chặn nếu nhận `WRITE_TOOLS` (`ToolRejected` / `HandoffError`).
-- **Ranh giới Code / Model & Tính tiền:** `MockLLM` chỉ tham gia bước `plan` và `draft` câu trả lời trên metadata an toàn. Nếu đơn không hiển thị hoặc ngoài phạm vi principal → trả `escalated`. Nếu hợp lệ, **code của orchestrator** gọi `lab8.tools.compute_compensation` trên `order` có cấu trúc (chỉ dùng policy `is_current=1` và `effective_date <= 2026-11-15`, bỏ qua số ngày/clause giả mạo trong `ticket`).
-- **Gọi Host & Durability:** Nếu quote `<= 0`, shape tự từ chối (`denied`, `proposal_amount=0`) và không gọi `issue_refund`. Nếu quote `> 0`, orchestrator truyền **quote đầy đủ** và `crash_at` vào `lab8.durability.issue_refund` (không tự trừ phần đã hoàn trước đó và **không** bắt `InjectedCrash`, chỉ flush trace trước khi re-raise). Host kiểm `approval_id` thuộc đúng claim, trừ phần đã hoàn theo đơn (T13/T14), đảm bảo idempotency theo `refund:{claim_id}`, và trả kết quả qua `lab8.shapes.common.finish()`.
-- **Trace an toàn (`trace.v1`):** Ghi lần lượt các event `claim_view`, `plan`, `handoff` (đã sanitize), `investigator` (order theo `ORDER_FIELDS`, `policy_count`, `refund_history`), `quote`, `host_refund`, `decision` (và `crash`/`error` khi có sự cố), tuyệt đối không ghi `CANARY_SECRET_*`, `ticket` thô, SĐT, địa chỉ, tên hàng hay ghi chú nội bộ.
+Workflow là chuỗi bước Python cố định, không có vòng lặp và không có nhánh do model chọn:
 
 1. **Đọc claim** bằng `get_claim_view` (chỉ `claim_id`, `principal_id`, `order_id`, `ticket`; không `SELECT *` nên `parent_secret` và header không bao giờ được đọc). Không có claim → `failed`, `proposal_amount` 0.
 2. **Thiếu `order_id`** → `needs_info`. Không đoán mã đơn từ chữ trong ticket (T04).
@@ -112,7 +98,12 @@ Trên 14 claim × 5 seed, single dùng tối đa 5 bước ReAct (4.43 model cal
 
 ### 3.3 Shape C — orchestrator và handoff
 
-> Đinh Hoàng Phong viết: `make_handoff` với allowlist và tool chỉ đọc, `run_readonly_investigators`, orchestrator quote và gọi `issue_refund`, trace ghi handoff đã sanitize, vì sao tóm tắt LLM không phải redaction.
+- **Đọc dữ liệu & lập kế hoạch:** Orchestrator mở SQLite store, đọc thông tin claim qua `lab8.tools.get_claim_view` (chỉ lấy `claim_id`, `principal_id`, `order_id`, `ticket`; không truy vấn `SELECT *`, không đọc `parent_secret` hay `raw_headers_json`). Nếu thiếu `claim_id` trả `failed` (`unknown_claim`); nếu thiếu `order_id` trả `needs_info` (tuyệt đối không tách mã đơn từ chữ trong `ticket`).
+- **Handoff & Sanitization:** Orchestrator dùng `lab8.handoff.make_handoff` tạo gói `handoff.v1` chứa các trường trong allowlist (`ALLOWED_FIELDS`), `facts` rỗng (không chứa context của parent, header, hay thông tin cá nhân) và `allowed_tools` chỉ gồm 3 tool đọc (`lookup_order`, `lookup_policy`, `lookup_refund_history`). Sau đó `lab8.runtime.run_readonly_investigators` thực thi các tool này với `worker=True` và kiểm tra scope `principal_id`; investigator không có write registry và bị chặn nếu nhận `WRITE_TOOLS` (`ToolRejected` / `HandoffError`).
+- **Ranh giới Code / Model & Tính tiền:** `MockLLM` chỉ tham gia bước `plan` và `draft` câu trả lời trên metadata an toàn. Nếu đơn không hiển thị hoặc ngoài phạm vi principal → trả `escalated`. Nếu hợp lệ, **code của orchestrator** gọi `lab8.tools.compute_compensation` trên `order` có cấu trúc (chỉ dùng policy `is_current=1` và `effective_date <= 2026-11-15`, bỏ qua số ngày/clause giả mạo trong `ticket`).
+- **Gọi Host & Durability:** Nếu quote `<= 0`, shape tự từ chối (`denied`, `proposal_amount=0`) và không gọi `issue_refund`. Nếu quote `> 0`, orchestrator truyền **quote đầy đủ** và `crash_at` vào `lab8.durability.issue_refund` (không tự trừ phần đã hoàn trước đó và **không** bắt `InjectedCrash`, chỉ flush trace trước khi re-raise). Host kiểm `approval_id` thuộc đúng claim, trừ phần đã hoàn theo đơn (T13/T14), đảm bảo idempotency theo `refund:{claim_id}`, và trả kết quả qua `lab8.shapes.common.finish()`.
+- **Trace an toàn (`trace.v1`):** Ghi lần lượt các event `claim_view`, `plan`, `handoff` (đã sanitize), `investigator` (order theo `ORDER_FIELDS`, `policy_count`, `refund_history`), `quote`, `host_refund`, `decision` (và `crash`/`error` khi có sự cố), tuyệt đối không ghi `CANARY_SECRET_*`, `ticket` thô, SĐT, địa chỉ, tên hàng hay ghi chú nội bộ.
+- **Kiểm chứng:** `python -m pytest -q -m student -o addopts= -k orchestrator` → 62 passed; test bổ sung `src/tests/test_orchestrator_handoff_extra.py` chạy trong cổng host; benchmark public: pass rate 1.000, pass^5 1.000, variance 0, cost/success 57.21 VND mô phỏng (`src/reports/benchmark.json`).
 
 ## 4. Kết quả
 
@@ -129,13 +120,13 @@ Số liệu đo đạc thực nghiệm từ `src/reports/benchmark.json` (4 shap
 
 *Ghi chú:*
 - Pass rate và Pass^5: Cả 3 shape nhóm viết (`workflow`, `single`, `orchestrator`) đều đạt tuyệt đối 100% (70/70 trial thành công). Riêng swarm tham chiếu thất bại 1 trial ở `C-002` seed 55 (`R-swarm-C-002-s55`) do agent tin vào số ngày trễ ghi quá trong văn bản ticket (5 ngày) thay vì tin order row thực tế (2 ngày), dẫn đến hoàn 20.000 VND thay vì từ chối.
-- Chi phí (Cost per Success): `workflow` tiết kiệm nhất (28.79 VND), thấp hơn `single` 26% và thấp hơn `orchestrator` 98% nhờ chỉ gọi MockLLM đúng 1 lần duy nhất ở bước soạn câu trả lời sau khi mọi quyết định đã hoàn tất.
+- Chi phí (Cost per Success): `workflow` tiết kiệm nhất (28.79 VND), thấp hơn `single` (36.30) khoảng 21% và thấp hơn `orchestrator` (57.21) khoảng 50% — nói cách khác single đắt hơn workflow 26%, orchestrator đắt hơn 99% — nhờ chỉ gọi MockLLM đúng 1 lần duy nhất ở bước soạn câu trả lời sau khi mọi quyết định đã hoàn tất.
 - Độ ổn định (Variance): Cả 3 shape của nhóm đều đạt variance = 0 trên 5 seed.
 
 ### 4.2 Kiểm thử độ bền và An toàn khi gặp sự cố (Crash Safety)
 
 - **Kết quả:** `crash_safety = 20/20` (100%) tại `src/reports/crash.json`.
-- Thử nghiệm trên 20 kịch bản sự cố ngẫu nhiên bao gồm 3 điểm inject crash: `before_effect`, `after_effect_before_checkpoint`, và `after_checkpoint`.
+- 20 kịch bản cố định (không ngẫu nhiên) do `lab8.crash_test` sinh: 17 kịch bản crash ở 3 điểm (`before_effect` × 5, `after_effect_before_checkpoint` × 7, `after_checkpoint` × 5), 1 kịch bản gọi lại với số tiền khác (`amount_conflict_on_retry`), 1 kịch bản retry khi không có approval (`retry_without_approval`) và 1 kịch bản crash của swarm (`swarm_after_effect_before_checkpoint`).
 - Mọi trường hợp crash khi tiến hành resume lại trên cùng database đều phục hồi đúng 1 refund và 1 audit event `refund_committed`, không xảy ra bất kỳ lỗi double refund (hoàn tiền kép) nào nhờ transaction ACID và khóa idempotency `refund:{claim_id}` trong SQLite.
 
 ### 4.3 Kiểm soát vi phạm (Approval & Secret Leaks)
@@ -147,15 +138,14 @@ Quyết định kiến trúc và lý do: xem `report/team/decision_adr.md`. Phi�
 
 ## 5. Khó khăn và cách xử lý
 
-> Mỗi thành viên ghi phần mình, Nguyễn Ánh Dương tổng hợp.
-
 - **Workflow (Đỗ Hồng Vỹ):** máy dùng Python 3.14 trong venv, ngoài dải 3.11–3.13 mà đề yêu cầu; smoke, cổng host và ma trận student vẫn chạy được, nhưng benchmark và crash test cuối cùng nên chạy lại trên Python 3.11–3.13 để khớp máy chấm. Khi in dữ liệu claim tiếng Việt ra console Windows gặp `UnicodeEncodeError` (cp1252); xử lý bằng `PYTHONIOENCODING=utf-8` và không in ticket ra stdout trong code shape.
 - **Single (Nguyễn Ánh Dương):**
   - *Vòng lặp không giữ lịch sử.* `run_react` chỉ đưa cho `decide` kết quả của tool vừa gọi (`last_tool`, `last_result`), không có lịch sử các bước trước. Xử lý: `decide` là closure giữ một `_Memory` riêng (claim view, order lookup, quote, refund history), và chọn bước tiếp theo từ memory đó.
   - *Lệnh tự kiểm trong `task.md` đếm nhầm.* `python -m pytest -q -m student -o addopts= -k single` báo `60 failed, 182 passed`: 60 test fail đều là của orchestrator (lúc đó chưa làm), vì `-k single` khớp cả tên test `test_public_single_run_cases`. Lọc đúng shape bằng `-k "single and not workflow and not orchestrator and not swarm"` → `62 passed`.
   - *Đọc nhầm metric `steps`.* Benchmark báo single mean steps 8.43, p95 10, nhìn như vượt trần 8. Đọc `lab8/benchmark.py::_steps` thì thấy metric này đếm số event trong trace, không phải số bước ReAct. Số bước ReAct thật được kiểm riêng trong `test_react_loop_stays_within_eight_steps` (tối đa 5).
   - *Môi trường.* `python` hệ thống chưa cài pytest (`No module named pytest`); phải chạy bằng venv của repo (`src/.venv/Scripts/python.exe`, Python 3.13.0).
-- **Orchestrator (Đinh Hoàng Phong):** _chờ bổ sung — khó khăn khi dựng handoff/sanitize, lệnh và output._
+- **Orchestrator (Đinh Hoàng Phong):** nhánh `feat/orchestrator` được tách từ `main` trước khi workflow và single được merge, nên trước khi mở PR #1 phải merge `main` vào nhánh (commit `216cd90`) để chạy lại cổng host và ma trận student trên code mới nhất.
+- **Tích hợp (Đỗ Hồng Vỹ):** sau khi merge PR #1, `group_report.md` bị lẫn tiêu đề cũ từ nhánh orchestrator và mục Trace của ADR bị thay bằng trace của orchestrator trong khi shape chọn là workflow; một hash commit ghi trong ADR (`ad2241a`) không tồn tại trong lịch sử repo do được lấy trước khi commit bị viết lại. Xử lý: gộp lại nội dung đúng mục, khôi phục trace của workflow trong ADR, kiểm mọi hash bằng `git cat-file -t <hash>`, và chạy lại benchmark, crash test để xác nhận file trong `src/reports/` khớp 100% (280 trial, crash 20/20).
 - **Durability, benchmark, crash (Phạm Văn Chiêu):**
   - *Hiểu lầm về cơ chế Amount Conflict:* Ban đầu khi kiểm thử tình huống gọi lại claim với số tiền khác (`test_different_amount_replay_triggers_conflict`), tôi thử nghiệm nâng số tiền lên 70.000 VND trên claim `C-001`. Tuy nhiên host áp dụng approval ceiling của `A-001` (chỉ duyệt 35.000) nên số tiền được cấp phép vẫn bị chặn ở 35.000 VND, khiến hệ thống xử lý như một `idempotent_replay` hợp lệ thay vì báo xung đột. Sau khi phân tích luồng `durability.py`, tôi hạ số tiền xuống 10.000 VND để số tiền sau khi áp luật khác với số tiền đã commit (35.000 $\ne$ 10.000), kích hoạt thành công cơ chế phát hiện `amount_conflict` và audit log tương ứng.
   - *Xử lý ranh giới Crash Recovery:* Chạy và phân tích `lab8.demo.buggy_workflow` cho thấy khi crash xảy ra tại thời điểm `after_effect_before_checkpoint`, file checkpoint bị thiếu dẫn đến rủi ro double refund (2 dòng trong ledger). Để khắc phục, hệ thống phải dựa trên SQLite ACID transaction và khóa `refund:{claim_id}` để đảm bảo lần chạy lại nhận diện được bản ghi đã commit và phục hồi an toàn `20/20`.

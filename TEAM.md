@@ -5,7 +5,7 @@
 - Tên nhóm: BuaDi
 - Lớp: L3B
 - Repo nhóm: `K5-L3B-DAY08-BuaDi-FromWorkflowsToAgents` (xem [SUBMISSION.md](SUBMISSION.md))
-- URL repo, nhánh nộp, commit chốt: https://github.com/Do-Hong-Vy/K5-L3B-DAY08-BuaDi-FromWorkflowsToAgents, nhánh `main`, commit chốt:
+- URL repo, nhánh nộp, commit chốt: https://github.com/Do-Hong-Vy/K5-L3B-DAY08-BuaDi-FromWorkflowsToAgents, nhánh `main`, commit chốt: 0bc1326
 
 ## Thành viên
 
@@ -30,7 +30,7 @@ Gợi ý chia vai:
 | Đỗ Hồng Vỹ | Workflow + integration | bd65064 | `tests/test_workflow_extra.py` (27 test) |
 | Nguyễn Ánh Dương | Single (ReAct) | dc851fb | `tests/test_single_extra.py` (43 test) |
 | Đinh Hoàng Phong | Orchestrator + handoff | ed04930 | `tests/test_orchestrator_handoff_extra.py` (30 test) |
-| Phạm Văn Chiêu | Ledger/crash + evaluation | ad2241a | `tests/test_durability_extra.py` (14 test) |
+| Phạm Văn Chiêu | Ledger/crash + evaluation | 59886e7 | `tests/test_durability_extra.py` (14 test) |
 
 ## Cá nhân
 

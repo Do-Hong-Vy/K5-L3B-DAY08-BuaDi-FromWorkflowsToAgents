@@ -116,7 +116,32 @@ Trên 14 claim × 5 seed, single dùng tối đa 5 bước ReAct (4.43 model cal
 
 ## 4. Kết quả
 
-> Phạm Văn Chiêu viết, lấy từ `src/reports/benchmark.json` của commit chốt: bảng 4 shape — pass rate, pass^5, seed min–max, variance, cost/success, mean/p95 steps; crash safety từ `src/reports/crash.json`; kết quả tự kiểm `student_drop/` nếu có.
+Số liệu đo đạc thực nghiệm từ `src/reports/benchmark.json` (4 shape × 14 claim public × 5 seed = 280 trials) và `src/reports/crash.json` (20 kịch bản sự cố) do Phạm Văn Chiêu (M4) thực thi trên cùng corpus, seed, MockLLM và bảng giá chuẩn:
+
+### 4.1 Bảng so sánh 4 kiến trúc (Public Benchmark)
+
+| Shape | Pass Rate | Pass^5 | Seed Min–Max | Variance | Cost/Success (VND mô phỏng) | Mean Steps | P95 Steps | Mean Model Calls | Mean Tool Calls |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **workflow** | **1.000** | **1.000** | **1.000 – 1.000** | **0.000000** | **28.79** | 5.93 | 7.0 | 1.00 | 2.79 |
+| **single** | 1.000 | 1.000 | 1.000 – 1.000 | 0.000000 | 36.30 | 8.43 | 10.0 | 4.43 | 3.43 |
+| **orchestrator** | 1.000 | 1.000 | 1.000 – 1.000 | 0.000000 | 57.21 | 6.36 | 7.0 | 2.00 | 5.57 |
+| **swarm** (tham chiếu) | 0.986 | 0.929 | 0.929 – 1.000 | 0.000816 | 49.57 | 2.80 | 3.0 | 3.00 | 4.66 |
+
+*Ghi chú:*
+- Pass rate và Pass^5: Cả 3 shape nhóm viết (`workflow`, `single`, `orchestrator`) đều đạt tuyệt đối 100% (70/70 trial thành công). Riêng swarm tham chiếu thất bại 1 trial ở `C-002` seed 55 (`R-swarm-C-002-s55`) do agent tin vào số ngày trễ ghi quá trong văn bản ticket (5 ngày) thay vì tin order row thực tế (2 ngày), dẫn đến hoàn 20.000 VND thay vì từ chối.
+- Chi phí (Cost per Success): `workflow` tiết kiệm nhất (28.79 VND), thấp hơn `single` 26% và thấp hơn `orchestrator` 98% nhờ chỉ gọi MockLLM đúng 1 lần duy nhất ở bước soạn câu trả lời sau khi mọi quyết định đã hoàn tất.
+- Độ ổn định (Variance): Cả 3 shape của nhóm đều đạt variance = 0 trên 5 seed.
+
+### 4.2 Kiểm thử độ bền và An toàn khi gặp sự cố (Crash Safety)
+
+- **Kết quả:** `crash_safety = 20/20` (100%) tại `src/reports/crash.json`.
+- Thử nghiệm trên 20 kịch bản sự cố ngẫu nhiên bao gồm 3 điểm inject crash: `before_effect`, `after_effect_before_checkpoint`, và `after_checkpoint`.
+- Mọi trường hợp crash khi tiến hành resume lại trên cùng database đều phục hồi đúng 1 refund và 1 audit event `refund_committed`, không xảy ra bất kỳ lỗi double refund (hoàn tiền kép) nào nhờ transaction ACID và khóa idempotency `refund:{claim_id}` trong SQLite.
+
+### 4.3 Kiểm soát vi phạm (Approval & Secret Leaks)
+
+- **Approval bypass count:** 0. Cổng host chặn hoàn toàn các trường hợp approval hết hạn, bị thu hồi, sai mã claim (`approval_claim_mismatch`) hoặc đơn hàng đã hoàn đủ (`order_already_refunded`), đồng thời ghi nhận audit `policy_denied`.
+- **Secret & PII leak count:** 0. Quét toàn bộ 280 trial trong benchmark không phát hiện bất kỳ chuỗi `CANARY_SECRET_*`, token bearer, hay PII (SĐT, địa chỉ, ghi chú nội bộ) nào trong trace files.
 
 Quyết định kiến trúc và lý do: xem `report/team/decision_adr.md`. Phiếu nghiên cứu và ablation: xem `report/team/research_card.md`.
 
@@ -131,7 +156,9 @@ Quyết định kiến trúc và lý do: xem `report/team/decision_adr.md`. Phi�
   - *Đọc nhầm metric `steps`.* Benchmark báo single mean steps 8.43, p95 10, nhìn như vượt trần 8. Đọc `lab8/benchmark.py::_steps` thì thấy metric này đếm số event trong trace, không phải số bước ReAct. Số bước ReAct thật được kiểm riêng trong `test_react_loop_stays_within_eight_steps` (tối đa 5).
   - *Môi trường.* `python` hệ thống chưa cài pytest (`No module named pytest`); phải chạy bằng venv của repo (`src/.venv/Scripts/python.exe`, Python 3.13.0).
 - **Orchestrator (Đinh Hoàng Phong):** _chờ bổ sung — khó khăn khi dựng handoff/sanitize, lệnh và output._
-- **Durability, benchmark, crash (Phạm Văn Chiêu):** _chờ bổ sung — kết quả crash suite, rà approval, hidden selfcheck._
+- **Durability, benchmark, crash (Phạm Văn Chiêu):**
+  - *Hiểu lầm về cơ chế Amount Conflict:* Ban đầu khi kiểm thử tình huống gọi lại claim với số tiền khác (`test_different_amount_replay_triggers_conflict`), tôi thử nghiệm nâng số tiền lên 70.000 VND trên claim `C-001`. Tuy nhiên host áp dụng approval ceiling của `A-001` (chỉ duyệt 35.000) nên số tiền được cấp phép vẫn bị chặn ở 35.000 VND, khiến hệ thống xử lý như một `idempotent_replay` hợp lệ thay vì báo xung đột. Sau khi phân tích luồng `durability.py`, tôi hạ số tiền xuống 10.000 VND để số tiền sau khi áp luật khác với số tiền đã commit (35.000 $\ne$ 10.000), kích hoạt thành công cơ chế phát hiện `amount_conflict` và audit log tương ứng.
+  - *Xử lý ranh giới Crash Recovery:* Chạy và phân tích `lab8.demo.buggy_workflow` cho thấy khi crash xảy ra tại thời điểm `after_effect_before_checkpoint`, file checkpoint bị thiếu dẫn đến rủi ro double refund (2 dòng trong ledger). Để khắc phục, hệ thống phải dựa trên SQLite ACID transaction và khóa `refund:{claim_id}` để đảm bảo lần chạy lại nhận diện được bản ghi đã commit và phục hồi an toàn `20/20`.
 
 ## 6. Tổng hợp đóng góp
 

@@ -27,8 +27,10 @@ Gợi ý chia vai:
 
 | Người | Vai | Commit | Test đã thêm hoặc sửa |
 | ----- | --- | ------ | --------------------- |
-| Đỗ Hồng Vỹ | Workflow + integration | | `tests/test_workflow_extra.py` (27 test) |
-| Phạm Văn Chiêu | Ledger/crash + evaluation | 68d2a19 | `tests/test_durability_extra.py` (14 test) |
+| Đỗ Hồng Vỹ | Workflow + integration | bd65064 | `tests/test_workflow_extra.py` (27 test) |
+| Nguyễn Ánh Dương | Single (ReAct) | dc851fb | `tests/test_single_extra.py` (43 test) |
+| Đinh Hoàng Phong | Orchestrator + handoff | ed04930 | `tests/test_orchestrator_handoff_extra.py` (30 test) |
+| Phạm Văn Chiêu | Ledger/crash + evaluation | ad2241a | `tests/test_durability_extra.py` (14 test) |
 
 ## Cá nhân
 
@@ -42,19 +44,44 @@ Ví dụ: `report/team/20241234_NguyenVanAn.md`.
 
 Sao chép mục dưới đây cho từng thành viên.
 
-## MSSV_HoTen
+## 2A202604087_NguyenAnhDuong
 
 ### Phần việc phụ trách
 
--
+- Shape B `single`: `src/lab8/shapes/single.py` (CP2 + CP3).
+- Test riêng: `src/tests/test_single_extra.py` (43 test).
+- Báo cáo: `report/team/research_card.md` (viết phiếu, chạy ablation R2); mục 3.2 và tổng hợp mục 5 của `report/team/group_report.md`.
 
 ### Đóng góp cụ thể
 
--
+- Cài đặt agent ReAct chạy trong `lab8.runtime.run_react` với `MAX_STEPS = 8`.
+- Registry chỉ chứa tool đọc; `decide` chỉ đọc từ tool view và bỏ qua ticket.
+- Quote lấy từ `compute_compensation`, truyền quote đầy đủ vào `durability.issue_refund`.
 
 ### Bằng chứng
 
--
+- `python -m pytest -q -m student -o addopts= -k "single and not workflow and not orchestrator and not swarm"` → 62 passed.
+- `report/team/2A202604087_NguyenAnhDuong.md`.
+
+## 2A202604090_DinhHoangPhong
+
+### Phần việc phụ trách
+
+- Shape C `orchestrator`: `src/lab8/shapes/orchestrator.py` (CP2 + CP3).
+- Test riêng: `src/tests/test_orchestrator_handoff_extra.py` (30 test).
+- Rà soát secret/PII, bảo đảm Trace contract v1 và fail-closed (CP4.3, CP4.4).
+- Mục 3 (Shape C), 6, 7, 8 trong `group_report.md` và mục Trace trong ADR.
+
+### Đóng góp cụ thể
+
+- Dựng handoff an toàn qua `make_handoff` với allowlist `handoff.v1`.
+- Giao investigator chạy các tool chỉ đọc; orchestrator trực tiếp tính quote và gọi `durability.issue_refund`.
+- Rà soát không để lộ secret / PII trên 14 claims public × 5 seed.
+
+### Bằng chứng
+
+- `python -m pytest -q -m student -o addopts= -k orchestrator` → 62 passed.
+- `report/team/2A202604090_DinhHoangPhong.md`.
 
 ## 2A202604107_DoHongVy
 

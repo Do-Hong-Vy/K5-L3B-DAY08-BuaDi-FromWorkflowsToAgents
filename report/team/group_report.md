@@ -141,6 +141,10 @@ Số liệu đo đạc thực nghiệm từ `src/reports/benchmark.json` (4 shap
 - **Kết quả oracle trên hidden:** workflow **200/200**, single **200/200**, orchestrator **200/200** (pass 1.000). Các bẫy đáng chú ý đều ra đúng: ticket nói dối số ngày (C-H01, C-H04, C-H13, C-H20 → `denied`), injection / policy cũ / policy tương lai (C-H07, C-H24, C-H36 → `denied`, quote 0), approval mượn của claim khác (C-H09 → `policy_denied`), approval hết hạn / thu hồi / bằng 0 (C-H08, C-H32, C-H31, C-H17 → `policy_denied`), approval hết hạn đúng ngày `as_of` vẫn hợp lệ (C-H33 → 33.000), approval thấp hơn quote (C-H10 → 12.000), ship + damage lấy số lớn hơn (C-H11 → 150.000), đơn đã hoàn đủ (C-H26 → `order_already_refunded`), hoàn phần chênh (C-H30 → 62.000), đơn hủy / đang giao (C-H16, C-H38 → `denied`), homoglyph và mã đơn trong ticket không được dùng (C-H05 → `needs_info`, C-H21 dùng `order_id` có cấu trúc), principal lẫn và đơn không tồn tại (C-H06, C-H23 → `escalated`, không lộ PII).
 - **Giới hạn:** oracle là cách hiểu luật của nhóm, nên 1.000 ở đây là bằng chứng nhất quán với `business_rules.md`, không thay cho điểm chính thức của grader giảng viên.
 
+### 4.5 Bonus B3: verifier cho swarm
+
+`src/bonus/swarm_verified.py` giữ nguyên swarm (kể cả điểm yếu seed 55) và thêm verifier bằng code trước `issue_refund`. Trên 11 claim đối kháng nhóm tự viết nhãn, swarm 0.891 / pass^5 0.455 (4 trial ghi refund sai), swarm_verified 1.000 / 1.000, cost/success 65.40 so với 60.34 (swarm) và 30.93 (workflow). Verifier ngang workflow về độ đúng nhưng tốn gấp khoảng 2 lần, nên không đổi quyết định chọn workflow. Chi tiết: [bonus_report.md](bonus_report.md), số liệu `src/reports/bonus_b3.json`.
+
 Quyết định kiến trúc và lý do: xem `report/team/decision_adr.md`. Phiếu nghiên cứu và ablation: xem `report/team/research_card.md`.
 
 ## 5. Khó khăn và cách xử lý

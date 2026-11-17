@@ -1,14 +1,15 @@
 """Independent oracle for unlabeled claims, derived from docs/business_rules.md.
 
 Usage (from src/):  python scripts/hidden_oracle_check.py <claims.jsonl> <world.json> [--check-public]
-Builds labels per claim, runs workflow/single/orchestrator x 5 seeds on a fresh
+                    [--shapes workflow,single,orchestrator] [--extra-shape NAME=MODULE:FUNC]
+Builds labels per claim, runs the shapes x 5 seeds on a fresh
 sqlite per trial, and grades with lab8.metrics.trial_pass.
 """
 import json, sys, tempfile, time, collections
 from pathlib import Path
 
 sys.path.insert(0, str(Path.cwd()))
-from lab8.app import prepare_store, run_shape  # noqa: E402
+from lab8.app import prepare_store, register_extra_shapes, run_shape  # noqa: E402
 from lab8.db import connect  # noqa: E402
 from lab8.metrics import trial_pass  # noqa: E402
 
@@ -68,7 +69,12 @@ def main():
                 bad += 1
                 print("ORACLE MISMATCH", c["claim_id"], diff)
         print(f"oracle vs public labels: {len(claims) - bad}/{len(claims)} agree")
-    shapes = ["workflow", "single", "orchestrator"]
+    def opt(flag, default):
+        return sys.argv[sys.argv.index(flag) + 1] if flag in sys.argv else default
+
+    extras = [sys.argv[i + 1] for i, a in enumerate(sys.argv) if a == "--extra-shape"]
+    register_extra_shapes(extras)
+    shapes = [x for x in opt("--shapes", "workflow,single,orchestrator").split(",") if x]
     seeds = [11, 22, 33, 44, 55]
     fails = collections.defaultdict(list)
     passed = collections.Counter()

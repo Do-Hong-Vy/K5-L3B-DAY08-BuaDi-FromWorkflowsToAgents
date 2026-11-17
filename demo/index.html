@@ -372,6 +372,12 @@ function heatmap(){
   return `<table><thead><tr><th>Shape</th>${ids.map(i=>`<th>${i.slice(2)}</th>`).join("")}</tr></thead><tbody>
   ${SHAPES.map(s=>`<tr><td>${s}</td>${ids.map(i=>`<td>${cell(s,i)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
+// From src/reports/hidden_selfcheck.json (by_shape) + scripts/hidden_oracle_check.py output.
+const HIDDEN = [
+  {s:"workflow",     n:200, err:0, leak:0, st:[95,90,10,5], steps:6.075, oracle:200},
+  {s:"single",       n:200, err:0, leak:0, st:[95,90,10,5], steps:8.625, oracle:200},
+  {s:"orchestrator", n:200, err:0, leak:0, st:[95,90,10,5], steps:6.5,   oracle:200}
+];
 const CMDS = [
   "python -m lab8.benchmark --shapes workflow,single,orchestrator,swarm --cases data/public_claims.jsonl --seeds 11,22,33,44,55 --out reports/benchmark.json",
   "python -m lab8.crash_test --count 20 --out reports/crash.json",
@@ -399,6 +405,12 @@ ${SHAPES.map(s=>{const b=B[s];return `<tr class="${s==="workflow"?"pick":""}"><t
 <div class="panel"><h3>Từng trial: shape × claim, 5 ô là 5 seed</h3>
 <div class="heat">${heatmap()}</div>
 <div style="display:flex;gap:12px;flex-wrap:wrap" class="note"><span><span class="dots"><i></i></span> pass</span><span><span class="dots"><i class="f"></i></span> fail</span><span>Rê chuột lên ô để xem chi tiết seed.</span></div></div>
+<div class="panel"><h3>Tự kiểm trên bộ hidden (<span class="mono">student_drop/</span>, 40 claim × 5 seed)</h3>
+<p class="note">Claim không nhãn nên lệnh chính thức không tính pass rate; cột “Oracle nhóm” chấm bằng nhãn nhóm tự dựng từ luật nghiệp vụ qua <span class="mono">lab8.metrics.trial_pass</span> (khớp 14/14 nhãn public). Nguồn: <span class="mono">src/reports/hidden_selfcheck.json</span>, <span class="mono">src/scripts/hidden_oracle_check.py</span>.</p>
+<div class="tbl"><table><thead><tr><th>Shape</th><th class="num">Trial</th><th class="num">Error</th><th class="num">Leak suspect</th><th class="num">denied / resolved / escalated / needs_info</th><th class="num">Mean steps</th><th class="num">Oracle nhóm</th></tr></thead><tbody>
+${HIDDEN.map(h=>`<tr class="${h.s==="workflow"?"pick":""}"><td class="mono">${h.s}</td><td class="num">${h.n}</td><td class="num">${h.err}</td><td class="num">${h.leak}</td><td class="num">${h.st.join(" / ")}</td><td class="num">${h.steps.toFixed(2)}</td><td class="num">${h.oracle}/${h.n}</td></tr>`).join("")}
+</tbody></table></div>
+<p class="note">Điểm hidden chính thức do grader giảng viên chấm; oracle chỉ phản ánh cách nhóm hiểu luật.</p></div>
 <div class="grid g2">
 <div class="panel"><span class="chip acc">ADR · Shape chọn: workflow</span><h3>Có đáng đổi lấy multi-agent không?</h3>
 <p class="note">Không, với dữ liệu hiện có. Workflow đã đạt 1.000 với variance 0, nên không còn mức pass nào để đổi lấy cost cao hơn. Single và orchestrator đúng bằng workflow nhưng tốn hơn 26% và 99%.</p></div>

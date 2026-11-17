@@ -58,3 +58,4 @@ Nếu trace nằm ngoài chỗ scanner quét được thì không chứng minh �
 - Latency để `unavailable`; không có số latency nào trong ADR này.
 - Cost là giá mô phỏng trong `config/pricing.yaml`, không phải hóa đơn API.
 - Bộ public chỉ có 14 claim; pass 1.000 trên public chưa chứng minh pass trên hidden 40 claim × 5 seed. Không sửa JSON cho đủ 0.75.
+- Tự kiểm hidden (`student_drop/`, không có nhãn): `src/reports/hidden_selfcheck.json` cho workflow 200 trial, 0 error, 0 leak suspect. Chấm bằng oracle nhóm tự dựng từ `docs/business_rules.md` (`src/scripts/hidden_oracle_check.py`, khớp 14/14 nhãn public) ra workflow 200/200, run id ví dụ `R-workflow-C-H30-s55` (hoàn phần chênh 62.000), `R-workflow-C-H09-s11` (approval của claim khác → `policy_denied`). Oracle là cách hiểu luật của nhóm, không thay điểm grader giảng viên.

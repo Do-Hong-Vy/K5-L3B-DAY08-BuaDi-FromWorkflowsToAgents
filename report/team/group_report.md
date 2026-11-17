@@ -134,6 +134,13 @@ Số liệu đo đạc thực nghiệm từ `src/reports/benchmark.json` (4 shap
 - **Approval bypass count:** 0. Cổng host chặn hoàn toàn các trường hợp approval hết hạn, bị thu hồi, sai mã claim (`approval_claim_mismatch`) hoặc đơn hàng đã hoàn đủ (`order_already_refunded`), đồng thời ghi nhận audit `policy_denied`.
 - **Secret & PII leak count:** 0. Quét toàn bộ 280 trial trong benchmark không phát hiện bất kỳ chuỗi `CANARY_SECRET_*`, token bearer, hay PII (SĐT, địa chỉ, ghi chú nội bộ) nào trong trace files.
 
+### 4.4 Tự kiểm trên bộ hidden (`student_drop/`, CP5)
+
+- **Lệnh chính thức** (`src/README.md`): `python -m lab8.benchmark --shapes workflow,single,orchestrator --cases student_drop/hidden_claims.jsonl --world student_drop/hidden_world_state.json --out reports/hidden_selfcheck.json`. Kết quả trong `src/reports/hidden_selfcheck.json`: 40 claim × 5 seed = 200 trial mỗi shape, `error_trials = 0`, `leak_suspect_trials = 0` ở cả 3 shape. Phân bố trạng thái giống hệt nhau ở cả 3 shape: `denied` 95, `resolved` 90, `escalated` 10, `needs_info` 5.
+- **Oracle tự dựng (không phải nhãn của giảng viên):** vì `student_drop/` không có nhãn, nhóm viết `src/scripts/hidden_oracle_check.py`, tính nhãn mong đợi trực tiếp từ `docs/business_rules.md` và world state (policy hiện hành, quote = max(ship, damage), trần theo đơn, approval đúng claim/còn hạn/không thu hồi/> 0), rồi chấm từng trial bằng chính `lab8.metrics.trial_pass` (ledger, audit, trace, chuỗi cấm). Oracle được kiểm trước trên bộ public: khớp **14/14** nhãn `expected`.
+- **Kết quả oracle trên hidden:** workflow **200/200**, single **200/200**, orchestrator **200/200** (pass 1.000). Các bẫy đáng chú ý đều ra đúng: ticket nói dối số ngày (C-H01, C-H04, C-H13, C-H20 → `denied`), injection / policy cũ / policy tương lai (C-H07, C-H24, C-H36 → `denied`, quote 0), approval mượn của claim khác (C-H09 → `policy_denied`), approval hết hạn / thu hồi / bằng 0 (C-H08, C-H32, C-H31, C-H17 → `policy_denied`), approval hết hạn đúng ngày `as_of` vẫn hợp lệ (C-H33 → 33.000), approval thấp hơn quote (C-H10 → 12.000), ship + damage lấy số lớn hơn (C-H11 → 150.000), đơn đã hoàn đủ (C-H26 → `order_already_refunded`), hoàn phần chênh (C-H30 → 62.000), đơn hủy / đang giao (C-H16, C-H38 → `denied`), homoglyph và mã đơn trong ticket không được dùng (C-H05 → `needs_info`, C-H21 dùng `order_id` có cấu trúc), principal lẫn và đơn không tồn tại (C-H06, C-H23 → `escalated`, không lộ PII).
+- **Giới hạn:** oracle là cách hiểu luật của nhóm, nên 1.000 ở đây là bằng chứng nhất quán với `business_rules.md`, không thay cho điểm chính thức của grader giảng viên.
+
 Quyết định kiến trúc và lý do: xem `report/team/decision_adr.md`. Phiếu nghiên cứu và ablation: xem `report/team/research_card.md`.
 
 ## 5. Khó khăn và cách xử lý
@@ -162,7 +169,7 @@ Chi tiết đóng góp (commit hash, test đã thêm/sửa) và bằng chứng c
 ## 7. Hạn chế và hướng cải thiện
 
 - **Giới hạn của MockLLM và số đo:** `MockLLM` là mô hình giả lập cố định theo seed (`complete`), không phải LLM sản xuất nên không phản ánh được năng lực hiểu ngôn ngữ tự nhiên thực tế hoặc các lỗi suy luận/hallucination đa dạng ngoài quy luật lập trình sẵn. Tương tự, chi phí là đơn vị mô phỏng từ `config/pricing.yaml` (không phải hóa đơn API thật) và độ trễ luôn là `unavailable`.
-- **Giới hạn tập dữ liệu kiểm chứng:** Tập public chỉ gồm 14 claim (bao phủ các mẫu bẫy T01–T14), còn tập `student_drop/` không kèm nhãn nên nhóm chỉ tự kiểm tra được tính ổn định (`status != error`), chuẩn trace và dấu hiệu rò rỉ trước khi giảng viên chấm hidden 40 claim × 5 seed.
+- **Giới hạn tập dữ liệu kiểm chứng:** Tập public chỉ gồm 14 claim (bao phủ các mẫu bẫy T01–T14), còn tập `student_drop/` không kèm nhãn. Nhóm đã chạy self-check chính thức (0 error, 0 leak suspect) và chấm thêm bằng oracle tự dựng từ luật nghiệp vụ (cả 3 shape 200/200, mục 4.4), nhưng oracle chỉ phản ánh cách nhóm hiểu luật; điểm hidden chính thức vẫn do grader giảng viên chấm.
 - **Điều kiện làm kết luận thay đổi:** Trong môi trường giả lập hiện tại, phần tính tiền và kiểm tra luật nằm hoàn toàn trong code nên chi phí điều phối nhiều bước không làm tăng độ chính xác nghiệp vụ. Kết luận này có thể đảo ngược nếu bài toán thực tế có yêu cầu trích xuất ngữ nghĩa phức tạp từ chứng từ/ticket không có cấu trúc mà vẫn giữ code làm lớp xác minh cuối (verifier) và host làm lớp ghi duy nhất.
 - **Hướng cải thiện:**
   1. Bổ sung bước **verifier bằng code** hoặc cơ chế kiểm tra chéo nếu triển khai với LLM thật để chặn triệt để sai lệch giữa văn bản ticket và dữ liệu có cấu trúc.

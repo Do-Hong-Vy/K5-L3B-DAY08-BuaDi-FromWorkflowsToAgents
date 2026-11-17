@@ -23,10 +23,10 @@ Tối đa 5 trang ngoài phụ lục. Số liệu lấy từ file trong `src/rep
 
 | Thành viên | Phần chính |
 | --- | --- |
-| Đỗ Hồng Vỹ | Shape A `workflow`, integration (repo, review/merge, nộp bài), ADR |
+| Đỗ Hồng Vỹ | Shape A `workflow`, integration (repo, review/merge, nộp bài), ADR, tự kiểm hidden |
 | Nguyễn Ánh Dương | Shape B `single` (ReAct), research card |
 | Đinh Hoàng Phong | Shape C `orchestrator`, handoff, rà secret/PII trong trace |
-| Phạm Văn Chiêu | Durability/approval trên cả ba shape, crash suite, benchmark, tự kiểm hidden |
+| Phạm Văn Chiêu | Durability/approval trên cả ba shape, crash suite, benchmark |
 
 **Thứ tự làm.** CP1 cả nhóm chạy smoke và cổng host, đọc business rules, contract và `swarm_reference.py`. CP2 ba shape làm song song trên ba nhánh; workflow làm trước và xong sớm nhất nên được dùng làm mốc đối chiếu kết quả T01–T14 cho single và orchestrator. CP3 nối `crash_at` vào `issue_refund` ở cả ba shape và kiểm T11/T12. CP4 chạy crash suite 20 điểm và rà approval/secret. CP5 chạy benchmark 4 shape × 5 seed, tự kiểm trên `student_drop/`, rồi chọn shape theo số đo.
 
@@ -161,10 +161,10 @@ Quyết định kiến trúc và lý do: xem `report/team/decision_adr.md`. Phi�
 
 Chi tiết đóng góp (commit hash, test đã thêm/sửa) và bằng chứng của cả 4 thành viên được tổng hợp tại bảng đóng góp trong [TEAM.md](../../TEAM.md) và 4 báo cáo cá nhân:
 
-- **M1 — Đỗ Hồng Vỹ** (`2A202604107`): [2A202604107_DoHongVy.md](2A202604107_DoHongVy.md) — Shape A `workflow`, tích hợp repo/PR, ADR và hoàn thiện nộp bài.
+- **M1 — Đỗ Hồng Vỹ** (`2A202604107`): [2A202604107_DoHongVy.md](2A202604107_DoHongVy.md) — Shape A `workflow`, tích hợp repo/PR, ADR, tự kiểm hidden (`hidden_selfcheck`, `hidden_oracle_check.py`, mục 4.4) và hoàn thiện nộp bài.
 - **M2 — Nguyễn Ánh Dương** (`2A202604087`): [2A202604087_NguyenAnhDuong.md](2A202604087_NguyenAnhDuong.md) — Shape B `single` (ReAct), `research_card.md`, tổng hợp mục 5.
 - **M3 — Đinh Hoàng Phong** (`2A202604090`): [2A202604090_DinhHoangPhong.md](2A202604090_DinhHoangPhong.md) — Shape C `orchestrator`, handoff sanitize (`handoff.v1`), `test_orchestrator_handoff_extra.py`, kiểm tra trace/secret/PII (CP4.3–4.4), mục 3 (Shape C), 6, 7, 8 và mục Trace trong ADR.
-- **M4 — Phạm Văn Chiêu** (`2A202604033`): [2A202604033_PhamVanChieu.md](2A202604033_PhamVanChieu.md) — Rà soát durability/approval, `crash_test`, `benchmark`, `hidden_selfcheck`, ablation và mục 4.
+- **M4 — Phạm Văn Chiêu** (`2A202604033`): [2A202604033_PhamVanChieu.md](2A202604033_PhamVanChieu.md) — Rà soát durability/approval, `crash_test`, `benchmark`, ablation và mục 4.1–4.3.
 
 ## 7. Hạn chế và hướng cải thiện
 
